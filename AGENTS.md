@@ -30,3 +30,24 @@
 
 `~/.dsh/AGENTS.md` 会自动加载，那里有优先级最高的两条：**删除规则**（只删本次自建的
 临时文件，其余先问）和**别记假成功日志**（写"已完成"前必须验证）。
+
+## 环境：GitHub 要走代理
+
+这台机器访问 GitHub 需要代理，但 **git 不会自动读 Windows 系统代理**，必须显式配置，
+否则 `git push` 会报 `Failed to connect to github.com port 443` 然后超时。
+
+本机代理：`http://127.0.0.1:7897`（系统代理已开启，映射到该端口）
+
+```bash
+# 只给当前仓库配
+git config http.proxy http://127.0.0.1:7897
+git config https.proxy http://127.0.0.1:7897
+
+# 或全局配（以后新建的仓库也生效）
+git config --global http.proxy http://127.0.0.1:7897
+git config --global https.proxy http://127.0.0.1:7897
+```
+
+**排查顺序**：先 `curl -x http://127.0.0.1:7897 -s -o NUL -w "%{http_code}" https://github.com`
+确认代理本身通，再去看 git 配置。代理端口可能因软件不同而变化，用
+`Get-NetTCPConnection -State Listen` 找当前监听的端口。
