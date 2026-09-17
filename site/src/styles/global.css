@@ -643,3 +643,281 @@ html {
   color: var(--text-mute);
   margin-bottom: 1.75rem;
 }
+/* ============================================================
+   动态层
+   背景会呼吸、内容滚动入场、页面之间有转场、每一次悬停都有回应。
+   全部纯 CSS + 少量原生 JS，无第三方库。
+   ============================================================ */
+
+/* ---------- 1. 环境背景：缓慢流动的色雾 ---------- */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(74px);
+  will-change: transform;
+}
+
+.ambient__blob--a {
+  width: 66vmax;
+  height: 66vmax;
+  left: -20vmax;
+  top: -18vmax;
+  background: radial-gradient(circle, rgb(216 168 108 / 38%) 0%, transparent 68%);
+  animation: drift-a 58s ease-in-out infinite alternate;
+}
+
+.ambient__blob--b {
+  width: 54vmax;
+  height: 54vmax;
+  right: -16vmax;
+  top: 8vmax;
+  background: radial-gradient(circle, rgb(198 136 128 / 30%) 0%, transparent 68%);
+  animation: drift-b 74s ease-in-out infinite alternate;
+}
+
+.ambient__blob--c {
+  width: 60vmax;
+  height: 60vmax;
+  left: 22vmax;
+  bottom: -26vmax;
+  background: radial-gradient(circle, rgb(126 150 188 / 26%) 0%, transparent 68%);
+  animation: drift-c 66s ease-in-out infinite alternate;
+}
+
+/* 三个循环时长故意不同步，避免看出"节奏" */
+@keyframes drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(16vmax, 10vmax, 0) scale(1.14); }
+}
+@keyframes drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.08); }
+  to   { transform: translate3d(-14vmax, 14vmax, 0) scale(1); }
+}
+@keyframes drift-c {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-18vmax, -10vmax, 0) scale(1.16); }
+}
+
+/* 颗粒：抵消数字画面的"太干净"，给一点纸的质感 */
+.ambient__grain {
+  position: absolute;
+  inset: -50%;
+  background-image: url('/grain.png');
+  background-size: 200px 200px;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ambient__blob--a { background: radial-gradient(circle, rgb(198 146 88 / 30%) 0%, transparent 68%); }
+  .ambient__blob--b { background: radial-gradient(circle, rgb(170 108 104 / 24%) 0%, transparent 68%); }
+  .ambient__blob--c { background: radial-gradient(circle, rgb(92 116 158 / 26%) 0%, transparent 68%); }
+  .ambient__grain { opacity: 0.1; mix-blend-mode: screen; }
+}
+
+/* ---------- 2. 首屏鼠标光晕 ---------- */
+.dust__glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  background: radial-gradient(
+    32rem 32rem at var(--gx, 50%) var(--gy, 45%),
+    color-mix(in srgb, var(--accent) 24%, transparent) 0%,
+    transparent 68%
+  );
+}
+
+.dust[data-pointer] .dust__glow {
+  opacity: 1;
+}
+
+/* ---------- 3. 滚动入场 ---------- */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 0.68, 0.32, 1),
+    transform 0.7s cubic-bezier(0.22, 0.68, 0.32, 1);
+}
+
+.js [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* 列表里依次出现，滚动时更有节奏 */
+.timeline > li:nth-child(1) { transition-delay: 0s; }
+.timeline > li:nth-child(2) { transition-delay: 0.045s; }
+.timeline > li:nth-child(3) { transition-delay: 0.09s; }
+.timeline > li:nth-child(4) { transition-delay: 0.135s; }
+.timeline > li:nth-child(5) { transition-delay: 0.18s; }
+.timeline > li:nth-child(6) { transition-delay: 0.225s; }
+.timeline > li:nth-child(7) { transition-delay: 0.27s; }
+.timeline > li:nth-child(n + 8) { transition-delay: 0.4s; }
+
+.card-grid > li:nth-child(1) { transition-delay: 0s; }
+.card-grid > li:nth-child(2) { transition-delay: 0.05s; }
+.card-grid > li:nth-child(3) { transition-delay: 0.1s; }
+.card-grid > li:nth-child(4) { transition-delay: 0.15s; }
+.card-grid > li:nth-child(5) { transition-delay: 0.2s; }
+.card-grid > li:nth-child(n + 6) { transition-delay: 0.34s; }
+
+.kind-grid > *:nth-child(1) { transition-delay: 0s; }
+.kind-grid > *:nth-child(2) { transition-delay: 0.06s; }
+.kind-grid > *:nth-child(3) { transition-delay: 0.12s; }
+.kind-grid > *:nth-child(4) { transition-delay: 0.18s; }
+
+/* ---------- 4. 页面转场 ---------- */
+/* 页头页脚有各自的 transition:name，不参与 root 的位移，所以只有内容在动 */
+::view-transition-old(root) {
+  animation: vt-out 0.28s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vt-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- 5. 悬停微交互 ---------- */
+.timeline__item {
+  padding-inline-start: 0;
+  transition: padding-inline-start 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.timeline__item:hover {
+  padding-inline-start: 0.6rem;
+}
+
+.timeline__date {
+  transition: color 0.3s ease;
+}
+
+.timeline__item:hover .timeline__date {
+  color: var(--accent);
+}
+
+.timeline__title {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  transition: text-decoration-color 0.3s ease;
+}
+
+.timeline__item:hover .timeline__title {
+  text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* 悬停时滑入一个小箭头 */
+.timeline__title::after {
+  content: '→';
+  display: inline-block;
+  margin-inline-start: 0.45em;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+  color: var(--accent);
+}
+
+.timeline__item:hover .timeline__title::after {
+  opacity: 1;
+  transform: none;
+}
+
+/* 板块卡的图标悬停时轻轻抬起 */
+.kind-card__glyph {
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.kind-card:hover .kind-card__glyph {
+  transform: translateY(-3px) scale(1.07);
+}
+
+.kind-card__count {
+  transition: color 0.3s ease;
+}
+
+.kind-card:hover .kind-card__count {
+  color: var(--accent);
+}
+
+/* 导航：当前项下面的小横线滑出来 */
+.site-nav a {
+  position: relative;
+}
+
+.site-nav a::after {
+  content: '';
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 0.15rem;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.site-nav a:hover::after {
+  transform: scaleX(1);
+}
+
+/* 正文里的图片，悬停时轻微提起 */
+.prose img {
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.prose img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -16px rgb(0 0 0 / 35%);
+}
+
+/* ---------- 6. 尊重"减少动态效果" ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ambient__blob {
+    animation: none;
+  }
+
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .timeline__item:hover {
+    padding-inline-start: 0;
+  }
+
+  .timeline__title::after {
+    display: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

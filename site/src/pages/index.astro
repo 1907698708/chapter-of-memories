@@ -24,11 +24,11 @@ const total = entries.length
   </section>
 
   <section class="section" aria-labelledby="kinds-heading">
-    <h2 id="kinds-heading" class="section__title">从这里进去</h2>
+    <h2 id="kinds-heading" class="section__title" data-reveal>从这里进去</h2>
     <div class="kind-grid">
       {
         KIND_IDS.map((id) => (
-          <a class="kind-card" href={`/${id}/`}>
+          <a class="kind-card" href={`/${id}/`} data-reveal>
             <span class="kind-card__glyph" aria-hidden="true">
               {KINDS[id].glyph}
             </span>
@@ -42,7 +42,7 @@ const total = entries.length
   </section>
 
   <section class="section" aria-labelledby="recent-heading">
-    <h2 id="recent-heading" class="section__title">最近的记录</h2>
+    <h2 id="recent-heading" class="section__title" data-reveal>最近的记录</h2>
     {
       recent.length > 0 ? (
         <Timeline entries={recent} showKind />

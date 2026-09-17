@@ -61,3 +61,30 @@ npm run build     # 必须通过，不能有报错
 > ⚠️ **如果哪天觉得"粒子不够显眼，加大密度吧"——方向就错了。**
 > 粒子是氛围，不是主角。觉得页面不够有冲击力时，该改的是**排版张力**（字号、层级、留白），
 > 不是粒子数量。首屏那组 `clamp()` 字号才是让它不单调的东西。
+## 排查渲染问题的正确姿势
+
+**无头浏览器截图会把 CSS 过渡拍在半路**，看起来就像"内容没显示 / 淡掉了"。
+别据此判断页面坏了 —— 我已经被这个假象骗过一次。
+
+验证最终状态的正确做法：加 `--force-prefers-reduced-motion` 截图。
+它会让 `prefers-reduced-motion: reduce` 分支生效（`transition: none`），
+拍到的就是动画结束后的稳定状态。
+
+```bash
+msedge --headless=new --disable-gpu --force-prefers-reduced-motion \
+  --virtual-time-budget=6000 --screenshot=out.png --window-size=1440,1700 <url>
+```
+
+另外 `--virtual-time-budget` 只快进定时器和网络，**不驱动 CSS 过渡**，
+所以加大它并不能让过渡跑完。`--dump-dom` 在 `--headless=new` 下也不输出。
+
+## "默认隐藏、靠 JS 放出来"的动画必须做降级
+
+入场动画（`[data-reveal]`）有个致命故障模式：**JS 一旦不工作，内容就永久隐形**。
+比"没有动画"严重得多。所以有两道保险，改的时候不许去掉：
+
+1. CSS 里写成 `.js [data-reveal]`，`.js` 由 `<head>` 里的内联脚本添加。
+   无 JS → 没有这个类 → 规则不匹配 → 内容正常显示。
+2. `initReveal()` 里有个 2 秒兜底：观察器一次都没回调就全部放出来。
+
+改完必须静态核实编译产物里每条隐藏规则都带 `.js` 前缀。

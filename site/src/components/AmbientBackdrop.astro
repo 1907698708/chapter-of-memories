@@ -1,0 +1,22 @@
+---
+/**
+ * 环境背景：全站铺一层会缓慢流动的色块 + 颗粒质感。
+ *
+ * 为什么是这个而不是更多粒子：
+ *   粒子是"点"，背景是"面"。页面显得死板，通常是因为底色是一块不动的纯色。
+ *   铺一层极慢流动的暖色雾，整页立刻"活"了，而且它不抢内容的注意力。
+ *
+ * 构成：
+ *   1. 三个大尺寸模糊色块，各自 40~70 秒走一个循环，互不同步（避免看出节奏）
+ *   2. 一层极淡的噪点，给屏幕一点"纸"的颗粒感，消除数字感
+ *
+ * 纯 CSS，无 JS，无第三方库。开了 prefers-reduced-motion 就停止流动。
+ */
+---
+
+<div class="ambient" aria-hidden="true">
+  <span class="ambient__blob ambient__blob--a"></span>
+  <span class="ambient__blob ambient__blob--b"></span>
+  <span class="ambient__blob ambient__blob--c"></span>
+  <span class="ambient__grain"></span>
+</div>

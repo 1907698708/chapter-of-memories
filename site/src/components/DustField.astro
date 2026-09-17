@@ -1,44 +1,40 @@
 ---
 /**
- * 光尘：首屏背后的粒子层。
+ * 首屏的两层动态效果：
+ *   1. 光晕 —— 跟随鼠标的柔和径向光，像有一盏灯照在你手边
+ *   2. 光尘 —— 暖色微粒缓慢上浮、明暗呼吸，靠近鼠标被轻轻拨开
  *
- * 设计意图是"空气感"，不是"科技感"——
- *   · 低密度（按面积算，24~70 个，屏幕越大越多但封顶）
- *   · 暖色、低透明度、极慢上浮，像阳光里的灰尘
- *   · 鼠标靠近时被轻轻推开，是唯一"有反应"的地方
- *   · 只在首屏。往下滚出视野就完全停止，不占 CPU
- *
- * 不引第三方粒子库（那类库动辄几十 KB，功能我们用不到 5%）。
- * 不用时完全不存在：JS 关了只是没有粒子，页面照常。
+ * 手写 canvas，不用第三方粒子库（那类库动辄几十 KB，我们用不到 5%）。
+ * 不用时完全不存在：JS 关了页面照常，只是没有这两层。
  */
 ---
 
 <div class="dust" data-dust-root aria-hidden="true">
+  <span class="dust__glow" data-dust-glow></span>
   <canvas class="dust__canvas" data-dust-canvas></canvas>
 </div>
 
 <script>
-  const root = document.querySelector('[data-dust-root]')
-  const canvas = document.querySelector('[data-dust-canvas]')
+  /** 已经初始化过的根元素打标记，避免 astro:page-load 和 DOMContentLoaded 重复初始化。 */
+  function initDust() {
+    const rootEl = document.querySelector('[data-dust-root]:not([data-dust-init])')
+    const canvasEl = rootEl?.querySelector('[data-dust-canvas]')
+    if (!rootEl || !(canvasEl instanceof HTMLCanvasElement)) return
+    rootEl.setAttribute('data-dust-init', '')
 
-  // 用户明确表示不希望有动效时，一个粒子都不画
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+    // 用户明确表示不要动效时，一层都不做
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  if (root && canvas instanceof HTMLCanvasElement && !prefersReduced.matches) {
-    initDust(root, canvas)
-  }
-
-  function initDust(rootEl, canvasEl) {
     const ctx = canvasEl.getContext('2d', { alpha: true })
     if (!ctx) return
 
-    // 颜色从 CSS 变量取，跟着深浅色模式走
+    // 颜色从 CSS 变量来，跟着深浅色模式走
     const rgbRaw =
       getComputedStyle(document.documentElement).getPropertyValue('--dust-rgb').trim() ||
-      '214 178 138'
+      '186 148 106'
     const [dr, dg, db] = rgbRaw.split(/\s+/).map(Number)
 
-    /** 预渲染一颗柔和的尘粒贴图；每帧直接 drawImage，比画径向渐变快得多。 */
+    /** 预渲染一颗柔和的尘粒。每帧 drawImage 比现算径向渐变快一个量级。 */
     function makeSprite() {
       const S = 64
       const c = document.createElement('canvas')
@@ -47,7 +43,7 @@
       if (!g) return c
       const grad = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2)
       grad.addColorStop(0, `rgba(${dr},${dg},${db},1)`)
-      grad.addColorStop(0.4, `rgba(${dr},${dg},${db},0.3)`)
+      grad.addColorStop(0.35, `rgba(${dr},${dg},${db},0.45)`)
       grad.addColorStop(1, `rgba(${dr},${dg},${db},0)`)
       g.fillStyle = grad
       g.fillRect(0, 0, S, S)
@@ -66,18 +62,19 @@
     function spawn(fromBottom) {
       return {
         x: Math.random() * W,
-        y: fromBottom ? H + 20 : Math.random() * H,
-        r: 0.7 + Math.random() * 1.9,
-        vy: -(0.05 + Math.random() * 0.2),
+        y: fromBottom ? H + 24 : Math.random() * H,
+        r: 0.9 + Math.random() * 2.3,
+        vy: -(0.12 + Math.random() * 0.4),
         swayPhase: Math.random() * Math.PI * 2,
-        swaySpeed: 0.0015 + Math.random() * 0.005,
-        alpha: 0.1 + Math.random() * 0.3,
+        swaySpeed: 0.002 + Math.random() * 0.007,
+        base: 0.2 + Math.random() * 0.42,
+        twinklePhase: Math.random() * Math.PI * 2,
+        twinkleSpeed: 0.006 + Math.random() * 0.016,
       }
     }
 
     function seed() {
-      const target = Math.round((W * H) / 22000)
-      const count = Math.max(24, Math.min(70, target))
+      const count = Math.max(40, Math.min(110, Math.round((W * H) / 13000)))
       motes = Array.from({ length: count }, () => spawn(false))
     }
 
@@ -95,34 +92,42 @@
       seed()
     }
 
-    const REPEL_RADIUS = 140
+    const REPEL_RADIUS = 160
 
     function frame() {
+      // 页面转场会把旧 DOM 换掉；发现画布已经脱离文档就自己停下来，别空转
+      if (!canvasEl.isConnected) {
+        raf = 0
+        return
+      }
+
       ctx.clearRect(0, 0, W, H)
       for (const m of motes) {
         m.swayPhase += m.swaySpeed
+        m.twinklePhase += m.twinkleSpeed
         m.y += m.vy
-        m.x += Math.sin(m.swayPhase) * 0.22
+        m.x += Math.sin(m.swayPhase) * 0.26
 
-        // 鼠标扰动：越近推得越明显，但幅度很小，只是"被拨开"
         if (pointer.active) {
           const dx = m.x - pointer.x
           const dy = m.y - pointer.y
           const d2 = dx * dx + dy * dy
           if (d2 < REPEL_RADIUS * REPEL_RADIUS && d2 > 0.5) {
             const d = Math.sqrt(d2)
-            const push = (1 - d / REPEL_RADIUS) * 1.1
+            const push = (1 - d / REPEL_RADIUS) * 1.4
             m.x += (dx / d) * push
             m.y += (dy / d) * push
           }
         }
 
-        if (m.y < -20) Object.assign(m, spawn(true))
-        if (m.x < -20) m.x = W + 15
-        else if (m.x > W + 20) m.x = -15
+        if (m.y < -24) Object.assign(m, spawn(true))
+        if (m.x < -24) m.x = W + 16
+        else if (m.x > W + 24) m.x = -16
 
-        const size = m.r * 9
-        ctx.globalAlpha = m.alpha
+        // 明暗呼吸，让它看起来"活着"而不是一堆静止的点
+        const twinkle = 0.65 + 0.35 * Math.sin(m.twinklePhase)
+        const size = m.r * 10
+        ctx.globalAlpha = m.base * twinkle
         ctx.drawImage(sprite, m.x - size / 2, m.y - size / 2, size, size)
       }
       ctx.globalAlpha = 1
@@ -130,8 +135,7 @@
     }
 
     function start() {
-      if (raf !== 0) return
-      if (!inView || !tabVisible) return
+      if (raf !== 0 || !inView || !tabVisible) return
       raf = window.requestAnimationFrame(frame)
     }
 
@@ -141,7 +145,7 @@
       raf = 0
     }
 
-    // 滚出视野就停，别为一个看不见的东西烧电
+    // 滚出视野就别画了
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(
         (entries) => {
@@ -159,17 +163,33 @@
       else stop()
     })
 
-    rootEl.addEventListener('pointermove', (e) => {
+    // 鼠标光晕：把指针位置写成 CSS 变量，交给样式里的 radial-gradient
+    function setGlow(x, y) {
+      rootEl.style.setProperty('--gx', `${x}px`)
+      rootEl.style.setProperty('--gy', `${y}px`)
+    }
+
+    rootEl.addEventListener('pointerenter', (e) => {
       const rect = rootEl.getBoundingClientRect()
-      pointer.x = e.clientX - rect.left
-      pointer.y = e.clientY - rect.top
-      pointer.active = true
-    })
-    rootEl.addEventListener('pointerleave', () => {
-      pointer.active = false
+      setGlow(e.clientX - rect.left, e.clientY - rect.top)
+      rootEl.setAttribute('data-pointer', '')
     })
 
-    // 尺寸变化重建（用 rAF 合并抖动）
+    rootEl.addEventListener('pointermove', (e) => {
+      const rect = rootEl.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      pointer.x = x
+      pointer.y = y
+      pointer.active = true
+      setGlow(x, y)
+    })
+
+    rootEl.addEventListener('pointerleave', () => {
+      pointer.active = false
+      rootEl.removeAttribute('data-pointer')
+    })
+
     let resizeRaf = 0
     window.addEventListener('resize', () => {
       if (resizeRaf) return
@@ -181,5 +201,12 @@
 
     resize()
     start()
+  }
+
+  document.addEventListener('astro:page-load', initDust)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDust)
+  } else {
+    initDust()
   }
 </script>

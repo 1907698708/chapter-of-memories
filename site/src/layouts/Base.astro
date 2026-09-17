@@ -1,5 +1,7 @@
 ---
+import { ClientRouter } from 'astro:transitions'
 import '../styles/global.css'
+import AmbientBackdrop from '../components/AmbientBackdrop.astro'
 import { SITE } from '../lib/site'
 import { KINDS, KIND_IDS } from '../lib/kinds'
 
@@ -29,6 +31,15 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!--
+      给 <html> 打一个 js 标记。
+      入场动画的初始态是 opacity:0，而 CSS 里写成 `.js [data-reveal]` ——
+      只有这个脚本执行了才会生效。这样 JS 被禁用或加载失败时，
+      内容不会被永久藏起来（这是个很容易踩的坑）。
+    -->
+    <script is:inline>document.documentElement.classList.add('js')</script>
+
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
@@ -36,10 +47,16 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+
+    <!-- 页面转场：点链接不再白屏重载，新旧页面之间做过渡 -->
+    <ClientRouter />
   </head>
 
   <body>
-    <header class="site-header">
+    <!-- 全站的动态背景：缓慢流动的色雾 + 颗粒质感 -->
+    <AmbientBackdrop />
+
+    <header class="site-header" transition:name="site-header">
       <div class="container site-header__inner">
         <a class="site-title" href="/">{SITE.title}</a>
         <nav class="site-nav" aria-label="主导航">
@@ -60,11 +77,69 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
       </div>
     </main>
 
-    <footer class="site-footer">
+    <footer class="site-footer" transition:name="site-footer">
       <div class="container site-footer__inner">
         <span>© {new Date().getFullYear()} {SITE.author || SITE.title}</span>
         <span>用 Astro 生成</span>
       </div>
     </footer>
+
+    <script>
+      /**
+       * 滚动入场：带 [data-reveal] 的元素进入视口时上浮淡入。
+       *
+       * 用了 ClientRouter（页面转场）之后，模块脚本只在首次加载时执行一次，
+       * 每次导航都要靠 astro:page-load 事件重新初始化。下面有幂等保护，
+       * 所以首次加载两个事件都触发也不会重复处理。
+       *
+       * ⚠️ 这类"默认隐藏、靠 JS 放出来"的动画有个致命故障模式：JS 一旦不工作，
+       *    内容就永久隐形。所以做了两道保险：
+       *      1. 隐藏规则写成 `.js [data-reveal]`，.js 由 head 里的内联脚本添加；
+       *         JS 被禁用时这个类不存在，内容正常显示。
+       *      2. 观察器若在 2 秒内一次都没回调（说明它没在工作），
+       *         直接把所有元素放出来。
+       */
+      function initReveal() {
+        const nodes = Array.from(
+          document.querySelectorAll('[data-reveal]:not([data-reveal-ready])'),
+        )
+        if (nodes.length === 0) return
+
+        // 不支持观察器就什么都不做 —— 不隐藏就等于全部可见
+        if (!('IntersectionObserver' in window)) return
+
+        let hits = 0
+
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue
+              hits += 1
+              entry.target.classList.add('is-in')
+              io.unobserve(entry.target)
+            }
+          },
+          { rootMargin: '0px 0px -6% 0px', threshold: 0.04 },
+        )
+
+        for (const el of nodes) {
+          el.setAttribute('data-reveal-ready', '')
+          io.observe(el)
+        }
+
+        // 兜底：观察器完全没反应就把内容全部放出来。宁可没有动画，也不能没有内容。
+        window.setTimeout(() => {
+          if (hits > 0) return
+          for (const el of nodes) el.classList.add('is-in')
+        }, 2000)
+      }
+
+      document.addEventListener('astro:page-load', initReveal)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initReveal)
+      } else {
+        initReveal()
+      }
+    </script>
   </body>
 </html>

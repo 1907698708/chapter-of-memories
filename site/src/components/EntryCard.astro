@@ -15,7 +15,7 @@ const { title, date, cover, kind, place } = entry.data
 const glyph = kindOf(kind).glyph
 ---
 
-<li>
+<li data-reveal>
   <a class="card" href={entryHref(entry)}>
     {
       cover ? (

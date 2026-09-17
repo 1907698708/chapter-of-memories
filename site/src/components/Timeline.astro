@@ -18,7 +18,7 @@ const { entries, showKind = false } = Astro.props
       const { title, date, kind, summary } = entry.data
       const text = summary ?? excerpt(entry.body ?? '')
       return (
-        <li>
+        <li data-reveal>
           <a class="timeline__item" href={entryHref(entry)}>
             <time class="timeline__date" datetime={formatDateISO(date)}>
               {formatDateISO(date)}
