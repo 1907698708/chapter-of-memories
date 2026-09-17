@@ -1,52 +1,18 @@
 ---
 import Base from '../layouts/Base.astro'
-import DustField from '../components/DustField.astro'
+import SpaceScene from '../components/SpaceScene.astro'
 import Timeline from '../components/Timeline.astro'
-import { SITE } from '../lib/site'
-import { KINDS, KIND_IDS } from '../lib/kinds'
-import { allEntries, kindCounts } from '../lib/entries'
+import { allEntries } from '../lib/entries'
 
 const entries = await allEntries()
-const counts = await kindCounts()
 const recent = entries.slice(0, 8)
-const total = entries.length
 ---
 
 <Base>
-  <!-- 首屏：排版撑满 + 背后的光尘 -->
-  <section class="hero">
-    <DustField />
-    <div class="hero__inner">
-      <p class="hero__kicker">档案 · 共 {total} 条记录</p>
-      <h1 class="hero__title">{SITE.title}</h1>
-      <p class="hero__desc">{SITE.description}</p>
-    </div>
-  </section>
+  <!-- 首屏是一个有纵深的场景，不是一个标题加一排卡片 -->
+  <SpaceScene />
 
-  <section class="section" aria-labelledby="kinds-heading">
-    <h2 id="kinds-heading" class="section__title" data-reveal>从这里进去</h2>
-    <div class="kind-grid">
-      {
-        KIND_IDS.map((id) => (
-          <a
-            class="kind-card"
-            href={`/${id}/`}
-            data-reveal
-            data-tilt
-            style={`--card-color:${KINDS[id].color}`}
-          >
-            <span class="kind-card__glyph" aria-hidden="true">
-              {KINDS[id].glyph}
-            </span>
-            <div class="kind-card__label">{KINDS[id].label}</div>
-            <div class="kind-card__desc">{KINDS[id].desc}</div>
-            <div class="kind-card__count">{counts[id] ?? 0} 条</div>
-          </a>
-        ))
-      }
-    </div>
-  </section>
-
+  <!-- 场景之下才是可读的列表。空间感归空间感，找东西还得方便 -->
   <section class="section" aria-labelledby="recent-heading">
     <h2 id="recent-heading" class="section__title" data-reveal>最近的记录</h2>
     {

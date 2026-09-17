@@ -1,0 +1,111 @@
+---
+import { SECTIONS_LIST } from '../lib/kinds'
+import { kindCounts } from '../lib/entries'
+import { SITE } from '../lib/site'
+
+/**
+ * 首屏的 3D 空间。
+ *
+ * 为什么不用"标题 + 一排卡片 + 列表"：
+ *   那条竖线就是"一本书"的结构 —— 从上往下读，所有东西挤在中轴上。
+ *   这里改成：栏目作为悬浮在场景里的面板，前后有真实的纵深，
+ *   靠近的清楚、远的虚化，底下有透视地板给空间一个参照。
+ *
+ * 静态帧也必须能看出纵深（缩放差异、大气透视、地板），
+ * 这样即使关掉动画，它读起来仍然是"一个空间"而不是"一页列表"。
+ *
+ * 动效只有两处，都很克制：
+ *   · 鼠标移动 → 摄像机轻微转动，不同深度的面板位移量不同（视差）
+ *   · 页面滚动 → 场景整体向后退、淡出，把位置让给下面的内容
+ */
+
+const counts = await kindCounts()
+
+/**
+ * 手动摆位。故意错开，不排成整齐网格 —— 对齐的网格又会变回"目录"。
+ * x/y 是场景内的百分比，depth 决定前后层次。
+ */
+const PLACEMENT = [
+  { x: 24, y: 23, depth: 'far' },
+  { x: 65, y: 17, depth: 'near' },
+  { x: 16, y: 55, depth: 'near' },
+  { x: 78, y: 47, depth: 'far' },
+  { x: 46, y: 33, depth: 'mid' },
+  { x: 89, y: 30, depth: 'mid' },
+]
+
+const nodes = SECTIONS_LIST.map((section, index) => ({
+  section,
+  place: PLACEMENT[index % PLACEMENT.length],
+  count: counts[section.id] ?? 0,
+}))
+---
+
+<div class="space" data-space>
+  <div class="space__scene" data-space-scene>
+    <div class="space__floor" aria-hidden="true"></div>
+
+    <ul class="space__nodes">
+      {
+        nodes.map(({ section, place, count }) => (
+          <li
+            class={`space__node space__node--${place.depth}`}
+            style={`--nx:${place.x}%;--ny:${place.y}%;--nc:${section.color}`}
+          >
+            <a class="node" href={`/${section.id}/`} data-tilt>
+              <span class="node__glyph" aria-hidden="true">
+                {section.glyph}
+              </span>
+              <span class="node__label">{section.label}</span>
+              <span class="node__count">{count} 条</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="space__front">
+      <p class="space__kicker">共 {nodes.reduce((sum, n) => sum + n.count, 0)} 条记录</p>
+      <h1 class="space__title">{SITE.title}</h1>
+      <p class="space__desc">{SITE.description}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  /**
+   * 摄像机：鼠标移动时整个场景轻微转动。
+   * 不同深度的面板因此产生不同位移 —— 这就是视差，也是"空间感"的来源。
+   */
+  function initSpace() {
+    const space = document.querySelector('[data-space]:not([data-space-ready])')
+    const scene = space?.querySelector('[data-space-scene]')
+    if (!space || !scene) return
+    space.setAttribute('data-space-ready', '')
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (!window.matchMedia('(hover: hover)').matches) return
+
+    const BASE_TILT = 5
+    const RANGE = 7
+
+    function apply(px, py) {
+      scene.style.setProperty('--cam-y', `${(px * RANGE * 2).toFixed(2)}deg`)
+      scene.style.setProperty('--cam-x', `${(BASE_TILT - py * RANGE).toFixed(2)}deg`)
+    }
+
+    space.addEventListener('pointermove', (e) => {
+      const r = space.getBoundingClientRect()
+      apply((e.clientX - r.left) / r.width - 0.5, (e.clientY - r.top) / r.height - 0.5)
+    })
+
+    space.addEventListener('pointerleave', () => apply(0, 0))
+  }
+
+  document.addEventListener('astro:page-load', initSpace)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSpace)
+  } else {
+    initSpace()
+  }
+</script>
