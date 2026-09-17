@@ -51,3 +51,21 @@ git config --global https.proxy http://127.0.0.1:7897
 **排查顺序**：先 `curl -x http://127.0.0.1:7897 -s -o NUL -w "%{http_code}" https://github.com`
 确认代理本身通，再去看 git 配置。代理端口可能因软件不同而变化，用
 `Get-NetTCPConnection -State Listen` 找当前监听的端口。
+## 排查网络：用 curl，别用 Invoke-WebRequest
+
+这台机器上 **`Invoke-WebRequest` 走系统代理不可靠** —— 会对完全正常的 URL 持续报错，
+而 `curl.exe` 直连和走代理都返回 200。已经被这个骗过一次
+（误判成"Cloudflare 部署失败"，实际是 PowerShell 的问题）。
+
+验证线上站点一律用 curl：
+
+```powershell
+# 只看状态码
+curl.exe -s -o NUL -w "%{http_code}" --max-time 20 <url>
+
+# 取内容再在 PowerShell 里分析
+curl.exe -s -o out.html --max-time 30 <url>
+$c = [System.IO.File]::ReadAllText('out.html', (New-Object System.Text.UTF8Encoding($false)))
+```
+
+如果连 curl 都失败，再去查代理端口（见上一节）和 DNS。
