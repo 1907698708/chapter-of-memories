@@ -28,7 +28,7 @@ const groups = groupByMonth(entries)
 
 <Base title={info.label} description={info.desc}>
   <div class="section-page" style={`--section-color:${info.color}`}>
-    <header class="section-hero">
+    <header class="section-hero" transition:name={`kind-${kind}`}>
       <span class="section-hero__glyph" aria-hidden="true">{info.glyph}</span>
       <h1 class="section-hero__title">{info.label}</h1>
       <p class="section-hero__desc">{info.desc}</p>

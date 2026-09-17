@@ -1,0 +1,58 @@
+---
+import { SECTIONS_LIST } from '../lib/kinds'
+
+/**
+ * 左侧图标轨。
+ *
+ * 顶部导航取消之后，栏目的切换靠两件事：
+ *   · 首页的空间 —— 点悬浮面板走进去（主路径，有共享元素转场）
+ *   · 这条窄轨 —— 任何页面都能随时切（兜底路径）
+ *
+ * 用单个汉字当图标：和首页面板上的图标是同一套视觉语言，
+ * 也比 SVG 图标更贴合这个站的气质。鼠标靠近才展开文字。
+ *
+ * 窄屏（<60rem）自动变成底部的横条 —— 竖轨在手机上会挡内容。
+ */
+
+const here = Astro.url.pathname
+
+/** 首页和栏目用同一套判断，避免 /photo/ 和 /photo 这种写法不一致 */
+function isCurrent(href: string) {
+  if (href === '/') return here === '/'
+  return here === href || here.startsWith(href)
+}
+
+const items = [
+  { href: '/', glyph: '首', label: '首页', color: null as string | null },
+  ...SECTIONS_LIST.map((s) => ({
+    href: `/${s.id}/`,
+    glyph: s.glyph,
+    label: s.label,
+    color: s.color as string | null,
+  })),
+  { href: '/tags/', glyph: '签', label: '标签', color: null as string | null },
+  { href: '/about/', glyph: '我', label: '关于', color: null as string | null },
+]
+---
+
+<nav class="rail" aria-label="栏目导航">
+  <ul class="rail__list">
+    {
+      items.map((item) => (
+        <li>
+          <a
+            class="rail__item"
+            href={item.href}
+            aria-current={isCurrent(item.href) ? 'page' : undefined}
+            style={item.color ? `--rc:${item.color}` : undefined}
+          >
+            <span class="rail__glyph" aria-hidden="true">
+              {item.glyph}
+            </span>
+            <span class="rail__label">{item.label}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>

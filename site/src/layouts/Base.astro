@@ -5,8 +5,8 @@ import { ClientRouter } from 'astro:transitions'
 import 'lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css'
 import '../styles/global.css'
 import AmbientBackdrop from '../components/AmbientBackdrop.astro'
+import SectionRail from '../components/SectionRail.astro'
 import { SITE } from '../lib/site'
-import { KINDS, KIND_IDS } from '../lib/kinds'
 
 interface Props {
   title?: string
@@ -14,17 +14,6 @@ interface Props {
 }
 
 const { title, description = SITE.description } = Astro.props
-
-const nav = [
-  { href: '/', label: '首页' },
-  ...KIND_IDS.map((id) => ({ href: `/${id}/`, label: KINDS[id].label })),
-  { href: '/tags/', label: '标签' },
-  { href: '/about/', label: '关于' },
-]
-
-const here = Astro.url.pathname
-const isCurrent = (href: string) =>
-  href === '/' ? here === '/' : here === href || here.startsWith(href)
 
 const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
 ---
@@ -62,17 +51,11 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
     <header class="site-header" transition:name="site-header">
       <div class="container site-header__inner">
         <a class="site-title" href="/">{SITE.title}</a>
-        <nav class="site-nav" aria-label="主导航">
-          {
-            nav.map((item) => (
-              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
-                {item.label}
-              </a>
-            ))
-          }
-        </nav>
       </div>
     </header>
+
+    <!-- 栏目的切换：首页靠空间里的面板（主路径），任何页面靠左边这条轨（兜底） -->
+    <SectionRail />
 
     <main>
       <div class="container">

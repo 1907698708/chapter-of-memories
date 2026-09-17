@@ -52,7 +52,7 @@ const nodes = SECTIONS_LIST.map((section, index) => ({
             class={`space__node space__node--${place.depth}`}
             style={`--nx:${place.x}%;--ny:${place.y}%;--nc:${section.color}`}
           >
-            <a class="node" href={`/${section.id}/`} data-tilt>
+            <a class="node" href={`/${section.id}/`} data-tilt transition:name={`kind-${section.id}`}>
               <span class="node__glyph" aria-hidden="true">
                 {section.glyph}
               </span>
