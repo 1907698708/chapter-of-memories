@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro'
+import Timeline from '../../components/Timeline.astro'
+import { allEntries, tagCounts } from '../../lib/entries'
+
+export async function getStaticPaths() {
+  const tags = await tagCounts()
+  return tags.map(({ tag }) => ({
+    params: { tag },
+    props: { tag },
+  }))
+}
+
+const { tag } = Astro.props
+const entries = (await allEntries()).filter((e) => e.data.tags.includes(tag))
+---
+
+<Base title={`标签：${tag}`} description={`带有「${tag}」标签的全部内容`}>
+  <section class="page-head">
+    <h1>标签：{tag}</h1>
+    <p>{entries.length} 条内容</p>
+  </section>
+
+  <Timeline entries={entries} showKind />
+</Base>

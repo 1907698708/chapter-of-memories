@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro'
+import { SITE } from '../lib/site'
+---
+
+<Base title="关于" description={`关于 ${SITE.title}`}>
+  <article style="max-width:var(--measure);margin-inline:auto">
+    <header class="entry-head">
+      <h1>关于</h1>
+    </header>
+
+    <div class="prose">
+      <p>
+        这里是我的档案。放在这里的，是我觉得值得留下来的东西：写下的字、拍下的照片、
+        做过的东西、以及一些琐碎的生活。
+      </p>
+
+      <p>
+        <strong>这一段请改成你自己的话。</strong> 直接编辑
+        <code>src/pages/about.astro</code> 这个文件即可，改完重新构建就生效。
+      </p>
+
+      <h2>这里有什么</h2>
+      <p>内容分成几个板块，都可以自由增删（见 <code>src/lib/kinds.ts</code>）：</p>
+      <ul>
+        <li><strong>文字</strong> —— 随笔、长文、笔记</li>
+        <li><strong>照片</strong> —— 按时间与事件归类</li>
+        <li><strong>创作</strong> —— 作品、项目、过程记录</li>
+        <li><strong>生活</strong> —— 流水、里程碑、清单</li>
+      </ul>
+
+      <h2>联系我</h2>
+      <p>
+        把这里换成你的邮箱、社交账号，或者别的什么。不需要的话整段删掉就行。
+      </p>
+    </div>
+  </article>
+</Base>

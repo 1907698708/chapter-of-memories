@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro'
+import Timeline from '../components/Timeline.astro'
+import { SITE } from '../lib/site'
+import { KINDS, KIND_IDS } from '../lib/kinds'
+import { allEntries, kindCounts } from '../lib/entries'
+
+const entries = await allEntries()
+const counts = await kindCounts()
+const recent = entries.slice(0, 8)
+---
+
+<Base>
+  <section class="page-head">
+    <h1>{SITE.title}</h1>
+    <p>{SITE.description}</p>
+  </section>
+
+  <section aria-labelledby="kinds-heading" style="margin-bottom:3.5rem">
+    <h2 id="kinds-heading" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">板块</h2>
+    <div class="kind-grid">
+      {
+        KIND_IDS.map((id) => (
+          <a class="kind-card" href={`/${id}/`}>
+            <span class="kind-card__glyph" aria-hidden="true">
+              {KINDS[id].glyph}
+            </span>
+            <div class="kind-card__label">{KINDS[id].label}</div>
+            <div class="kind-card__desc">{KINDS[id].desc}</div>
+            <div class="kind-card__count">{counts[id] ?? 0} 条</div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section aria-labelledby="recent-heading">
+    <h2
+      id="recent-heading"
+      style="font-size:1.0625rem;font-weight:650;margin-bottom:1rem"
+    >
+      最近的记录
+    </h2>
+    {
+      recent.length > 0 ? (
+        <Timeline entries={recent} showKind />
+      ) : (
+        <p class="empty">
+          还没有内容。在 <code>src/content/entries/</code> 里新建一个
+          <code>.md</code> 文件就会出现在这里。
+        </p>
+      )
+    }
+  </section>
+</Base>

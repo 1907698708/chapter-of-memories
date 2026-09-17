@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro'
+import { tagCounts } from '../../lib/entries'
+
+const tags = await tagCounts()
+---
+
+<Base title="标签" description="按标签浏览全部内容">
+  <section class="page-head">
+    <h1>标签</h1>
+    <p>共 {tags.length} 个标签</p>
+  </section>
+
+  {
+    tags.length > 0 ? (
+      <ul class="tag-row" style="gap:.6rem">
+        {tags.map(({ tag, count }) => (
+          <li>
+            <a class="tag" href={`/tags/${tag}/`} style="font-size:.9rem;padding:.3rem .85rem">
+              {tag} <span style="color:var(--text-mute)">{count}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="empty">还没有标签。在内容前言里加 <code>tags: [旅行, 秋天]</code> 就会出现。</p>
+    )
+  }
+</Base>

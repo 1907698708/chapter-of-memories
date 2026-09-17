@@ -1,0 +1,40 @@
+---
+import type { Entry } from '../lib/entries'
+import { entryHref } from '../lib/entries'
+import { formatDateISO } from '../lib/format'
+import { kindOf } from '../lib/kinds'
+
+interface Props {
+  entry: Entry
+  /** 混排列表里显示板块名，单一板块页里就不必显示 */
+  showKind?: boolean
+}
+
+const { entry, showKind = false } = Astro.props
+const { title, date, cover, kind, place } = entry.data
+const glyph = kindOf(kind).glyph
+---
+
+<li>
+  <a class="card" href={entryHref(entry)}>
+    {
+      cover ? (
+        <div class="card__media">
+          <img src={cover} alt="" loading="lazy" decoding="async" />
+        </div>
+      ) : (
+        <div class="card__media card__media--empty" aria-hidden="true">
+          {glyph}
+        </div>
+      )
+    }
+    <div class="card__body">
+      <div class="card__title">{title}</div>
+      <div class="card__meta">
+        <time datetime={formatDateISO(date)}>{formatDateISO(date)}</time>
+        {place && <> · {place}</>}
+        {showKind && <> · {kindOf(kind).label}</>}
+      </div>
+    </div>
+  </a>
+</li>

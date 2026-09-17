@@ -1,0 +1,43 @@
+---
+import type { Entry } from '../lib/entries'
+import { entryHref } from '../lib/entries'
+import { formatDateISO, excerpt } from '../lib/format'
+import { kindOf } from '../lib/kinds'
+
+interface Props {
+  entries: Entry[]
+  showKind?: boolean
+}
+
+const { entries, showKind = false } = Astro.props
+---
+
+<ul class="timeline">
+  {
+    entries.map((entry) => {
+      const { title, date, kind, summary } = entry.data
+      const text = summary ?? excerpt(entry.body ?? '')
+      return (
+        <li>
+          <a class="timeline__item" href={entryHref(entry)}>
+            <time class="timeline__date" datetime={formatDateISO(date)}>
+              {formatDateISO(date)}
+            </time>
+            <div>
+              <div class="timeline__title">
+                {title}
+                {showKind && (
+                  <span style="color:var(--text-mute);font-weight:400;font-size:.85em">
+                    {' '}
+                    · {kindOf(kind).label}
+                  </span>
+                )}
+              </div>
+              {text && <p class="timeline__summary">{text}</p>}
+            </div>
+          </a>
+        </li>
+      )
+    })
+  }
+</ul>

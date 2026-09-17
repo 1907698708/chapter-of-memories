@@ -1,0 +1,51 @@
+---
+import Base from '../../layouts/Base.astro'
+import Timeline from '../../components/Timeline.astro'
+import EntryCard from '../../components/EntryCard.astro'
+import { KIND_IDS, kindOf } from '../../lib/kinds'
+import { allEntries, groupByMonth } from '../../lib/entries'
+import { formatMonth } from '../../lib/format'
+
+/**
+ * 每个板块一页，路由由 kinds.ts 生成 —— 加板块不用改这里。
+ */
+export async function getStaticPaths() {
+  return KIND_IDS.map((kind) => ({ params: { kind } }))
+}
+
+const kind = Astro.params.kind as string
+const info = kindOf(kind)
+
+const entries = (await allEntries()).filter((e) => e.data.kind === kind)
+const groups = groupByMonth(entries)
+---
+
+<Base title={info.label} description={info.desc}>
+  <section class="page-head">
+    <h1>{info.label}</h1>
+    <p>{info.desc}</p>
+  </section>
+
+  {
+    entries.length === 0 ? (
+      <p class="empty">
+        这个板块还是空的。写一条内容时在前言里加 <code>kind: {kind}</code> 就会归到这里。
+      </p>
+    ) : info.gallery ? (
+      groups.map((group) => (
+        <section style="margin-bottom:3rem">
+          <h2 style="font-size:.9rem;font-weight:600;color:var(--text-mute);margin-bottom:1rem">
+            {formatMonth(group.label)}
+          </h2>
+          <ul class="card-grid">
+            {group.items.map((entry) => (
+              <EntryCard entry={entry} />
+            ))}
+          </ul>
+        </section>
+      ))
+    ) : (
+      <Timeline entries={entries} />
+    )
+  }
+</Base>

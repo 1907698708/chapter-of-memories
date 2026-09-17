@@ -1,0 +1,63 @@
+---
+import { getCollection, render } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+import TagRow from '../../components/TagRow.astro'
+import { kindOf } from '../../lib/kinds'
+import { formatDate, formatDateISO, excerpt } from '../../lib/format'
+import { entryHref } from '../../lib/entries'
+
+/**
+ * 每条内容一个页面。
+ * 地址是 /entry/<文件名去掉后缀>/，例如 2026-09-16-第一篇.md -> /entry/2026-09-16-第一篇/
+ */
+export async function getStaticPaths() {
+  const entries = await getCollection('entries', ({ data }) => !data.draft)
+  return entries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }))
+}
+
+const { entry } = Astro.props
+const { Content } = await render(entry)
+const { title, date, kind, tags, place, summary } = entry.data
+const info = kindOf(kind)
+---
+
+<Base title={title} description={summary ?? excerpt(entry.body ?? '', 120)}>
+  <article style="max-width:var(--measure);margin-inline:auto">
+    <header class="entry-head">
+      <h1>{title}</h1>
+      <div class="entry-head__meta">
+        <a href={`/${kind}/`} style="text-decoration:none">{info.label}</a>
+        <span aria-hidden="true">·</span>
+        <time datetime={formatDateISO(date)}>{formatDate(date)}</time>
+        {
+          place && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{place}</span>
+            </>
+          )
+        }
+      </div>
+      {
+        tags.length > 0 && (
+          <div style="margin-top:1rem">
+            <TagRow tags={tags} />
+          </div>
+        )
+      }
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <nav
+      style="margin-top:4rem;padding-top:1.5rem;border-top:1px solid var(--line);font-size:.9rem"
+    >
+      <a href={`/${kind}/`}>← 回到「{info.label}」</a>
+    </nav>
+  </article>
+</Base>

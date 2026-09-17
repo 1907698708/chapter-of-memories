@@ -1,0 +1,7 @@
+# 无头浏览器截图与验证产物（含临时浏览器配置，体积大）
+_shots/
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
