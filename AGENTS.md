@@ -69,3 +69,29 @@ $c = [System.IO.File]::ReadAllText('out.html', (New-Object System.Text.UTF8Encod
 ```
 
 如果连 curl 都失败，再去查代理端口（见上一节）和 DNS。
+## 提交时的两个坑
+
+**一、多行提交信息不能用 `git commit -m`**
+
+Windows 下命令行里的换行会被当成参数分隔符，信息会被拆开，
+里面的斜杠（比如"增/删/改"）会被当成路径，报
+`fatal: /: '/' is outside repository`。
+
+写多行信息一律用文件：
+
+```powershell
+$msg = "C:\Users\ASUS\.dsh\_commitmsg.txt"   # 写到仓库之外
+[System.IO.File]::WriteAllText($msg, $content, (New-Object System.Text.UTF8Encoding($false)))
+git commit -F $msg
+Remove-Item $msg -Force
+```
+
+**二、临时文件会被 `git add -A` 一起提交**
+
+在仓库里创建提交信息文件 → `git add -A` → 它自己也被提交进去了。
+犯过两次。
+
+所以：**提交信息的临时文件写到仓库之外**（用 `$DSH_HOME`），
+并且 `.gitignore` 里有 `/_*` 兜底 —— 根目录下 `_` 开头的文件一律不入库。
+
+提交前养成看一眼 `git status --short` 的习惯。
