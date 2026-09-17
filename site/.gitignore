@@ -1,0 +1,16 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.astro/
+
+# 本地环境
+.env
+.env.production
+
+# 系统垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 原始照片（体积大，不进 git；发布用的压缩版放 src/assets/ 或 public/）
+原图/
