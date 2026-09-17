@@ -1,5 +1,8 @@
 ---
 import { ClientRouter } from 'astro:transitions'
+// 霞鹜文楷（屏幕版，国标字形）。这个包把中文按 unicode-range 切成 388 个小块，
+// 浏览器只下载页面上真正用到的那几块，所以标题用得起而正文不必背这个包袱。
+import 'lxgw-wenkai-screen-webfont/lxgwwenkaigbscreen.css'
 import '../styles/global.css'
 import AmbientBackdrop from '../components/AmbientBackdrop.astro'
 import { SITE } from '../lib/site'
@@ -139,6 +142,48 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
         document.addEventListener('DOMContentLoaded', initReveal)
       } else {
         initReveal()
+      }
+
+      /**
+       * 3D 倾斜：带 [data-tilt] 的元素跟着鼠标做透视旋转，做出"卡片有厚度"的感觉。
+       *
+       * 用 CSS 变量把角度写回去，由样式里的 transform 消费 —— 这样动画本身
+       * 还是走 CSS（合成器层），JS 只负责改数值，不会卡。
+       */
+      function initTilt() {
+        const nodes = document.querySelectorAll('[data-tilt]:not([data-tilt-ready])')
+        // 触摸设备没有"悬停"这回事，做了只会显得怪
+        if (!window.matchMedia('(hover: hover)').matches) return
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+        const MAX_DEG = 9
+
+        for (const el of nodes) {
+          el.setAttribute('data-tilt-ready', '')
+          const node = /** @type {HTMLElement} */ (el)
+
+          node.addEventListener('pointermove', (e) => {
+            const r = node.getBoundingClientRect()
+            const px = (e.clientX - r.left) / r.width - 0.5
+            const py = (e.clientY - r.top) / r.height - 0.5
+            node.style.setProperty('--rx', `${(-py * MAX_DEG).toFixed(2)}deg`)
+            node.style.setProperty('--ry', `${(px * MAX_DEG).toFixed(2)}deg`)
+            node.style.setProperty('--mx', `${((px + 0.5) * 100).toFixed(1)}%`)
+            node.style.setProperty('--my', `${((py + 0.5) * 100).toFixed(1)}%`)
+          })
+
+          node.addEventListener('pointerleave', () => {
+            node.style.setProperty('--rx', '0deg')
+            node.style.setProperty('--ry', '0deg')
+          })
+        }
+      }
+
+      document.addEventListener('astro:page-load', initTilt)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTilt)
+      } else {
+        initTilt()
       }
     </script>
   </body>

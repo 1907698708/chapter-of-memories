@@ -921,3 +921,172 @@ html {
     animation: none;
   }
 }
+/* ============================================================
+   字体：标题用霞鹜文楷
+   ------------------------------------------------------------
+   这个字体只有 400 一个字重。写 font-weight:700 会让浏览器合成假粗体，
+   笔画会糊 —— 所以标题的视觉分量靠"字号"和"留白"来做，不靠加粗。
+   ============================================================ */
+
+:root {
+  --font-display: 'LXGW WenKai Screen', 'Noto Serif SC', 'Source Han Serif SC',
+    'Songti SC', STKaiti, KaiTi, serif;
+}
+
+.hero__title,
+.section-hero__title,
+.entry-head h1,
+.page-head h1,
+.section__title,
+.month-block__title,
+.card__title,
+.site-title,
+.timeline__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.site-title {
+  font-size: 1.15rem;
+}
+
+.timeline__title {
+  font-size: 1.15rem;
+}
+
+/* ============================================================
+   栏目页：每个栏目有自己的主色
+   ------------------------------------------------------------
+   把 --accent 覆盖成栏目色，页面里所有用到强调色的地方
+   （卡片悬停边框、日期变色、下划线、图标）就自动跟着换了。
+   ============================================================ */
+
+.section-page {
+  --accent: var(--section-color, #9a6b3f);
+  --accent-soft: color-mix(in srgb, var(--section-color, #9a6b3f) 15%, transparent);
+}
+
+.section-hero {
+  padding-block: clamp(1rem, 5vh, 3rem) clamp(1.5rem, 5vh, 3rem);
+  margin-bottom: clamp(2rem, 6vh, 3.5rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.section-hero__glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 16px;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(150deg, var(--section-color), color-mix(in srgb, var(--section-color) 62%, #000));
+  box-shadow:
+    0 12px 32px -12px color-mix(in srgb, var(--section-color) 70%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 30%);
+}
+
+.section-hero__title {
+  font-size: clamp(2rem, 6vw, 3.75rem);
+  line-height: 1.1;
+}
+
+.section-hero__desc {
+  margin-top: 0.7rem;
+  font-size: 1.05rem;
+  color: var(--text-dim);
+}
+
+.section-hero__count {
+  margin-top: 0.5rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--section-color);
+}
+
+.month-block {
+  margin-bottom: clamp(2.5rem, 7vh, 4rem);
+}
+
+.month-block__title {
+  font-size: 1.2rem;
+  color: var(--text-mute);
+  margin-bottom: 1.1rem;
+}
+
+/* ============================================================
+   3D 倾斜：卡片跟着鼠标做透视旋转
+   ------------------------------------------------------------
+   角度由 JS 写成 --rx / --ry，这里只消费它们。
+   ============================================================ */
+
+[data-tilt] {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.4s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.4s ease,
+    border-color 0.3s ease;
+  will-change: transform;
+}
+
+/* 悬停时跟随鼠标的一层高光，让"厚度"更可信 */
+[data-tilt]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    22rem 22rem at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 22%),
+    transparent 62%
+  );
+}
+
+[data-tilt]:hover::after {
+  opacity: 1;
+}
+
+/* 板块入口卡：颜色改成各自栏目的主色，图标做成立体块 */
+.kind-card {
+  --accent: var(--card-color, #9a6b3f);
+  --accent-soft: color-mix(in srgb, var(--card-color, #9a6b3f) 15%, transparent);
+  transform-style: preserve-3d;
+}
+
+.kind-card__glyph {
+  background: linear-gradient(
+    150deg,
+    var(--card-color, #9a6b3f),
+    color-mix(in srgb, var(--card-color, #9a6b3f) 62%, #000)
+  );
+  color: #fff;
+  box-shadow:
+    0 10px 24px -12px color-mix(in srgb, var(--card-color, #9a6b3f) 75%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+/* 卡片内容稍微"抬起来"，强化纵深 */
+.kind-card__label,
+.kind-card__desc,
+.kind-card__count {
+  transform: translateZ(18px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tilt] {
+    transform: none;
+  }
+}

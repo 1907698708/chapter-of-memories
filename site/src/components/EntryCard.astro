@@ -16,7 +16,7 @@ const glyph = kindOf(kind).glyph
 ---
 
 <li data-reveal>
-  <a class="card" href={entryHref(entry)}>
+  <a class="card" href={entryHref(entry)} data-tilt style={`--card-color:${kindOf(kind).color}`}>
     {
       cover ? (
         <div class="card__media">

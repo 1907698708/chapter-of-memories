@@ -28,7 +28,13 @@ const total = entries.length
     <div class="kind-grid">
       {
         KIND_IDS.map((id) => (
-          <a class="kind-card" href={`/${id}/`} data-reveal>
+          <a
+            class="kind-card"
+            href={`/${id}/`}
+            data-reveal
+            data-tilt
+            style={`--card-color:${KINDS[id].color}`}
+          >
             <span class="kind-card__glyph" aria-hidden="true">
               {KINDS[id].glyph}
             </span>

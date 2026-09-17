@@ -7,7 +7,13 @@ import { allEntries, groupByMonth } from '../../lib/entries'
 import { formatMonth } from '../../lib/format'
 
 /**
- * 每个板块一页，路由由 kinds.ts 生成 —— 加板块不用改这里。
+ * 每个栏目一页。路由由 site.config.mjs 生成，加栏目不用改这里。
+ *
+ * 页面长相由栏目的 layout 决定：
+ *   stream   一行一条
+ *   gallery  按月分组的卡片网格
+ *   timeline 按月分组、带月份大标的时间线
+ * 另外每个栏目有自己的主色（--section-color），所以点进不同栏目是不一样的。
  */
 export async function getStaticPaths() {
   return KIND_IDS.map((kind) => ({ params: { kind } }))
@@ -21,31 +27,40 @@ const groups = groupByMonth(entries)
 ---
 
 <Base title={info.label} description={info.desc}>
-  <section class="page-head">
-    <h1>{info.label}</h1>
-    <p>{info.desc}</p>
-  </section>
+  <div class="section-page" style={`--section-color:${info.color}`}>
+    <header class="section-hero">
+      <span class="section-hero__glyph" aria-hidden="true">{info.glyph}</span>
+      <h1 class="section-hero__title">{info.label}</h1>
+      <p class="section-hero__desc">{info.desc}</p>
+      <p class="section-hero__count">{entries.length} 条记录</p>
+    </header>
 
-  {
-    entries.length === 0 ? (
-      <p class="empty">
-        这个板块还是空的。写一条内容时在前言里加 <code>kind: {kind}</code> 就会归到这里。
-      </p>
-    ) : info.gallery ? (
-      groups.map((group) => (
-        <section style="margin-bottom:3rem">
-          <h2 style="font-size:.9rem;font-weight:600;color:var(--text-mute);margin-bottom:1rem">
-            {formatMonth(group.label)}
-          </h2>
-          <ul class="card-grid">
-            {group.items.map((entry) => (
-              <EntryCard entry={entry} />
-            ))}
-          </ul>
-        </section>
-      ))
-    ) : (
-      <Timeline entries={entries} />
-    )
-  }
+    {
+      entries.length === 0 ? (
+        <p class="empty">
+          这个栏目还是空的。写内容时在前言里加 <code>kind: {kind}</code> 就会归到这里。
+        </p>
+      ) : info.layout === 'gallery' ? (
+        groups.map((group) => (
+          <section class="month-block">
+            <h2 class="month-block__title">{formatMonth(group.label)}</h2>
+            <ul class="card-grid">
+              {group.items.map((entry) => (
+                <EntryCard entry={entry} />
+              ))}
+            </ul>
+          </section>
+        ))
+      ) : info.layout === 'timeline' ? (
+        groups.map((group) => (
+          <section class="month-block">
+            <h2 class="month-block__title">{formatMonth(group.label)}</h2>
+            <Timeline entries={group.items} />
+          </section>
+        ))
+      ) : (
+        <Timeline entries={entries} />
+      )
+    }
+  </div>
 </Base>

@@ -7,9 +7,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "section": "node scripts/section.mjs"
   },
   "dependencies": {
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "lxgw-wenkai-screen-webfont": "^1.7.0"
   }
 }
