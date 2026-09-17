@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro'
+import DustField from '../components/DustField.astro'
 import Timeline from '../components/Timeline.astro'
 import { SITE } from '../lib/site'
 import { KINDS, KIND_IDS } from '../lib/kinds'
@@ -8,16 +9,22 @@ import { allEntries, kindCounts } from '../lib/entries'
 const entries = await allEntries()
 const counts = await kindCounts()
 const recent = entries.slice(0, 8)
+const total = entries.length
 ---
 
 <Base>
-  <section class="page-head">
-    <h1>{SITE.title}</h1>
-    <p>{SITE.description}</p>
+  <!-- 首屏：排版撑满 + 背后的光尘 -->
+  <section class="hero">
+    <DustField />
+    <div class="hero__inner">
+      <p class="hero__kicker">档案 · 共 {total} 条记录</p>
+      <h1 class="hero__title">{SITE.title}</h1>
+      <p class="hero__desc">{SITE.description}</p>
+    </div>
   </section>
 
-  <section aria-labelledby="kinds-heading" style="margin-bottom:3.5rem">
-    <h2 id="kinds-heading" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">板块</h2>
+  <section class="section" aria-labelledby="kinds-heading">
+    <h2 id="kinds-heading" class="section__title">从这里进去</h2>
     <div class="kind-grid">
       {
         KIND_IDS.map((id) => (
@@ -34,13 +41,8 @@ const recent = entries.slice(0, 8)
     </div>
   </section>
 
-  <section aria-labelledby="recent-heading">
-    <h2
-      id="recent-heading"
-      style="font-size:1.0625rem;font-weight:650;margin-bottom:1rem"
-    >
-      最近的记录
-    </h2>
+  <section class="section" aria-labelledby="recent-heading">
+    <h2 id="recent-heading" class="section__title">最近的记录</h2>
     {
       recent.length > 0 ? (
         <Timeline entries={recent} showKind />

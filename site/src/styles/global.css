@@ -550,3 +550,96 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   首屏：加大排版张力 + 光尘层
+   ------------------------------------------------------------
+   原来的问题不是"缺特效"，是排版张力不够（标题太小、层级太弱）。
+   粒子只是氛围，真正让它不单调的是下面这组字号。
+   ============================================================ */
+
+:root {
+  /* 光尘颜色，JS 会读这个变量。改成别的色能让粒子换色调 */
+  --dust-rgb: 186 148 106;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dust-rgb: 226 198 158;
+  }
+}
+
+/* 首屏要突破容器到全宽，会用到 100vw；裁掉可能多出来的横向滚动条。
+   用 clip 而不是 hidden —— hidden 会让祖先变成滚动容器，破坏页头的 sticky。 */
+html {
+  overflow-x: clip;
+}
+
+.hero {
+  position: relative;
+  /* 突破容器到视口两侧 */
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50%);
+  padding-block: clamp(4rem, 16vh, 10rem) clamp(3rem, 9vh, 6rem);
+  min-height: min(74vh, 42rem);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+/* 光尘层：铺满首屏，但在文字下面 */
+.dust {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.dust__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  /* 让鼠标事件穿透到粒子层，这样靠近时尘粒才会被拨开 */
+  pointer-events: none;
+}
+
+.hero__kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 1.2rem;
+}
+
+.hero__title {
+  font-size: clamp(2.6rem, 9.5vw, 7rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+}
+
+.hero__desc {
+  margin-top: 1.7rem;
+  font-size: clamp(1rem, 2.1vw, 1.3rem);
+  line-height: 1.75;
+  color: var(--text-dim);
+  max-width: 34rem;
+}
+
+/* ---------- 内容分区标题 ---------- */
+.section {
+  margin-top: clamp(3.5rem, 9vh, 6rem);
+}
+
+.section__title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 1.75rem;
+}

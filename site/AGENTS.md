@@ -46,3 +46,18 @@ npm run build     # 必须通过，不能有报错
 - 不要在页面里硬编码站名 —— 用 `src/lib/site.ts`
 - 不要为了一个页面引入新依赖
 - 不要把 `dist/`、`node_modules/`、`.astro/` 提交进仓库
+
+## 粒子层（`src/components/DustField.astro`）
+
+首屏的光尘是手写 canvas，不引第三方库。改的时候守住这几条：
+
+- **只在首屏**。滚出视野必须停（已用 IntersectionObserver 处理），不要让它全站常驻
+- **尊重 `prefers-reduced-motion`**：用户开了就一个粒子都不画
+- **密度按面积算并封顶**（24~70）。它的定位是"空气感"，不是"星海"
+- 颜色走 CSS 变量 `--dust-rgb`，别在 JS 里写死
+- 性能底线：用预渲染贴图 `drawImage`（不要每帧 `createRadialGradient`）、
+  devicePixelRatio 封顶 2、页面隐藏时停
+
+> ⚠️ **如果哪天觉得"粒子不够显眼，加大密度吧"——方向就错了。**
+> 粒子是氛围，不是主角。觉得页面不够有冲击力时，该改的是**排版张力**（字号、层级、留白），
+> 不是粒子数量。首屏那组 `clamp()` 字号才是让它不单调的东西。
