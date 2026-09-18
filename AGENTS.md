@@ -31,26 +31,36 @@
 `~/.dsh/AGENTS.md` 会自动加载，那里有优先级最高的两条：**删除规则**（只删本次自建的
 临时文件，其余先问）和**别记假成功日志**（写"已完成"前必须验证）。
 
-## 环境：GitHub 要走代理
+## 环境：推送走哪条路，每次先实测
 
-这台机器访问 GitHub 需要代理，但 **git 不会自动读 Windows 系统代理**，必须显式配置，
-否则 `git push` 会报 `Failed to connect to github.com port 443` 然后超时。
+这台机器访问 GitHub 的路径**会来回变**，而且方向不固定：
 
-本机代理：`http://127.0.0.1:7897`（系统代理已开启，映射到该端口）
+- 有时**直连能通、代理反而是坏的** —— 代理端口在监听，但不转发流量
+- 有时**直连被切断、必须走代理**
+- **系统代理设置和"实际能不能转发"是两回事**，端口在监听不代表通
 
-```bash
-# 只给当前仓库配
-git config http.proxy http://127.0.0.1:7897
-git config https.proxy http://127.0.0.1:7897
+所以**不要把 `git config http.proxy` 设死**。踩过：代理坏掉之后 git 一直失败，
+而 `curl` 直连明明返回 200 —— 因为 git 里还配着那个坏代理。
 
-# 或全局配（以后新建的仓库也生效）
-git config --global http.proxy http://127.0.0.1:7897
-git config --global https.proxy http://127.0.0.1:7897
+**每次推送用这个脚本，它会自己选路**：
+
+```powershell
+powershell -File F:\总工作区\.dsh-app\push.ps1 -Repo F:\workspace
 ```
 
-**排查顺序**：先 `curl -x http://127.0.0.1:7897 -s -o NUL -w "%{http_code}" https://github.com`
-确认代理本身通，再去看 git 配置。代理端口可能因软件不同而变化，用
-`Get-NetTCPConnection -State Listen` 找当前监听的端口。
+它对直连和代理各发一个 HEAD 请求实测，用能通的那条推（直连优先），
+两条都不通才需要人工开梯子。
+
+手动排查等价于：
+
+```powershell
+curl.exe -s -o NUL -w "%{http_code}" --max-time 10 https://github.com
+curl.exe -x http://127.0.0.1:7897 -s -o NUL -w "%{http_code}" --max-time 10 https://github.com
+```
+
+`200` 就是通。代理端口用 `Get-NetTCPConnection -State Listen` 找，
+软件不同端口会变。
+
 ## 排查网络：用 curl，别用 Invoke-WebRequest
 
 这台机器上 **`Invoke-WebRequest` 走系统代理不可靠** —— 会对完全正常的 URL 持续报错，
