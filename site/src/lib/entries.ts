@@ -11,7 +11,15 @@ export type Entry = CollectionEntry<'entries'>
  */
 export async function allEntries(): Promise<Entry[]> {
   const list = await getCollection('entries', ({ data }) => !data.draft)
-  return list.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  // 日期降序；日期相同时用 order 升序（组诗一天的几首要按题号排）；
+  // 都没有 order 才退回 id —— 中文 id 按码点排是乱的，只当最后兜底。
+  return list.sort((a, b) => {
+    const byDate = b.data.date.valueOf() - a.data.date.valueOf()
+    if (byDate !== 0) return byDate
+    const byOrder = (a.data.order ?? 0) - (b.data.order ?? 0)
+    if (byOrder !== 0) return byOrder
+    return a.id.localeCompare(b.id)
+  })
 }
 
 /** 某个板块的内容。 */

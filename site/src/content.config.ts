@@ -44,6 +44,13 @@ const entries = defineCollection({
      */
     format: z.enum(['prose', 'poem']).default('prose'),
 
+    /**
+     * 同一天发布多条时的先后（数字小的排前面）。
+     * 日期相同的话，光靠日期排不出顺序 —— 会退回按文件名排，
+     * 而中文文件名的顺序是乱的。像组诗这种一天发好几首的，用它定序。
+     */
+    order: z.number().optional(),
+
     /** 标 true 就不出现在列表和构建产物里，方便先存草稿。 */
     draft: z.boolean().default(false),
   }),
