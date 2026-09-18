@@ -15,7 +15,7 @@ export const SITE = {
    * 头像。图片放到 site/public/ 下，这里写以 / 开头的路径。
    * 文件不存在时会自动降级成昵称首字，不会出现裂图。
    */
-  avatar: '/avatar.png',
+  avatar: '/avatar.jpg',
 
   /** 语言，影响 <html lang> */
   lang: 'zh-CN',
