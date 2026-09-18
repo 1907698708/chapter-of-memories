@@ -20,7 +20,10 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props
 const { Content } = await render(entry)
-const { title, date, kind, tags, place, summary } = entry.data
+const { title, date, kind, tags, place, summary, format } = entry.data
+
+// 「诗」栏目里的内容自动按诗排；其他栏目想用诗排版就在前言里写 format: poem
+const isPoem = kind === 'poem' || format === 'poem'
 const info = kindOf(kind)
 ---
 
@@ -50,7 +53,7 @@ const info = kindOf(kind)
       }
     </header>
 
-    <div class="prose">
+    <div class={isPoem ? 'poem' : 'prose'}>
       <Content />
     </div>
 

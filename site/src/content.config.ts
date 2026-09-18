@@ -37,6 +37,13 @@ const entries = defineCollection({
     /** 地点。照片和生活流水常用。 */
     place: z.string().optional(),
 
+    /**
+     * 正文怎么排。默认 `prose`（普通文章）。
+     * 写 `poem` 会换成诗排版：保留换行、行距放宽、不首行缩进。
+     * 「诗」栏目里的内容自动按诗排，不用写这个字段。
+     */
+    format: z.enum(['prose', 'poem']).default('prose'),
+
     /** 标 true 就不出现在列表和构建产物里，方便先存草稿。 */
     draft: z.boolean().default(false),
   }),

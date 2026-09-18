@@ -61,6 +61,14 @@ export const SECTIONS = [
     order: 10,
   },
   {
+    id: "poem",
+    label: "诗",
+    desc: "写下的短句",
+    glyph: "诗",
+    color: "#7a6a9e",
+    layout: "stream",
+    order: 15,
+  },  {
     id: "photo",
     label: "照片",
     desc: "按时间与事件归类",

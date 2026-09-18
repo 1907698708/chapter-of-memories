@@ -1544,3 +1544,53 @@ html {
     text-shadow: none;
   }
 }
+
+/* ============================================================
+   诗的排版
+   ------------------------------------------------------------
+   诗和散文的要求相反：
+     · 换行是内容的一部分，必须保留（靠 astro.config 里的 remark-breaks）
+     · 行距要宽，让每行有呼吸
+     · 不要首行缩进 —— 中文诗习惯顶格
+     · 字号稍大，用衬线/展示字体（霞鹜文楷有笔意，适合）
+   用 <br> 换行，所以段落之间靠 margin 分开、行内不做额外处理。
+   ============================================================ */
+
+.poem {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 2.4;
+  letter-spacing: 0.06em;
+  color: var(--text);
+}
+
+.poem > * + * {
+  margin-top: 1.6em;
+}
+
+.poem p {
+  margin: 0;
+  text-indent: 0;
+}
+
+/* 诗里如果插了图片或引用，别被宽行距撑开 */
+.poem img,
+.poem blockquote,
+.poem pre {
+  line-height: 1.8;
+}
+
+.poem blockquote {
+  padding-inline-start: 1.1rem;
+  border-inline-start: 2px solid var(--accent);
+  color: var(--text-dim);
+}
+
+/* 手机上字号收一点，否则一行放不下 */
+@media (max-width: 46rem) {
+  .poem {
+    font-size: 1.08rem;
+    line-height: 2.15;
+    letter-spacing: 0.04em;
+  }
+}
