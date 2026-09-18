@@ -48,11 +48,6 @@ const pageTitle = title ? `${title} · ${SITE.title}` : SITE.title
     <!-- 全站的动态背景：缓慢流动的色雾 + 颗粒质感 -->
     <AmbientBackdrop />
 
-    <header class="site-header" transition:name="site-header">
-      <div class="container site-header__inner">
-        <a class="site-title" href="/">{SITE.title}</a>
-      </div>
-    </header>
 
     <!-- 栏目的切换：首页靠空间里的面板（主路径），任何页面靠左边这条轨（兜底） -->
     <SectionRail />

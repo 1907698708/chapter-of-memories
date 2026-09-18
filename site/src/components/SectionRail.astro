@@ -1,5 +1,11 @@
 ---
 import { SECTIONS_LIST } from '../lib/kinds'
+import { SITE } from '../lib/site'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+
+// 头像不在就退回汉字图标，不会裂图
+const hasAvatar = existsSync(join(process.cwd(), 'public', SITE.avatar.replace(/^\//u, '')))
 
 /**
  * 左侧图标轨。
@@ -47,7 +53,7 @@ const items = [
             style={item.color ? `--rc:${item.color}` : undefined}
           >
             <span class="rail__glyph" aria-hidden="true">
-              {item.glyph}
+              {item.href === '/' && hasAvatar ? <img src={SITE.avatar} alt="" /> : item.glyph}
             </span>
             <span class="rail__label">{item.label}</span>
           </a>

@@ -6,10 +6,16 @@ export const SITE = {
   title: '记忆之章',
 
   /** 一句话简介。出现在首页和分享卡片 */
-  description: '存放我的一切 —— 创作、照片、文字、生活。',
+  description: '欢迎来到记忆之章',
 
   /** 你的名字或昵称。留空则不显示 */
-  author: '',
+  author: '谬',
+
+  /**
+   * 头像。图片放到 site/public/ 下，这里写以 / 开头的路径。
+   * 文件不存在时会自动降级成昵称首字，不会出现裂图。
+   */
+  avatar: '/avatar.png',
 
   /** 语言，影响 <html lang> */
   lang: 'zh-CN',
