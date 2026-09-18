@@ -17,6 +17,18 @@ export const SITE = {
    */
   avatar: '/avatar.jpg',
 
+  /**
+   * 社交主页链接。显示在首屏头像下方。
+   *
+   * 加一条就多一个按钮，例如微博：
+   *   { label: '微博', href: 'https://weibo.com/u/xxxxxx' },
+   *
+   * href 留空的话这一条不会显示 —— 还没填的连接不会变成死链。
+   */
+  socials: [
+    { label: '抖音', href: '' },
+  ],
+
   /** 语言，影响 <html lang> */
   lang: 'zh-CN',
 } as const

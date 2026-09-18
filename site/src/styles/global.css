@@ -1665,3 +1665,69 @@ html {
     font-size: 0.95rem;
   }
 }
+/* ============================================================
+   社交链接按钮
+   ------------------------------------------------------------
+   放在首屏头像下方。外链一律新标签打开。
+   为什么不用平台的官方 logo：那些图形有商标限制，而且各家风格不一，
+   混在一起会破坏这一页的调性 —— 统一用同一套线条图标。
+   ============================================================ */
+
+.socials {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  /* 前景块整体是 pointer-events:none（为了让鼠标事件穿透到粒子层），
+     按钮必须自己打开，否则点不动 */
+  pointer-events: auto;
+}
+
+.socials__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.88rem;
+  text-decoration: none;
+  color: var(--text-dim);
+  box-shadow: 0 12px 26px -18px rgb(0 0 0 / 45%);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.3s ease;
+}
+
+.socials__item:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px -18px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.socials__icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+/* 外链小箭头，提示"会离开本站" */
+.socials__ext {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+  opacity: 0.5;
+  transition: opacity 0.25s ease, transform 0.3s ease;
+}
+
+.socials__item:hover .socials__ext {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
